@@ -1,0 +1,81 @@
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Toplam Oda</div>
+    <div class="stat-value"><%= total_rooms %></div>
+    <div class="stat-detail"><%= cleaning_rooms %> oda temizleniyor</div>
+  </div>
+  <div class="stat-card accent-blue">
+    <div class="stat-label">Doluluk Orani</div>
+    <div class="stat-value">%<%= occupancy_rate %></div>
+    <div class="stat-detail"><%= occupied_rooms %> / <%= total_rooms %> oda dolu</div>
+  </div>
+  <div class="stat-card accent-green">
+    <div class="stat-label">Aktif Misafir</div>
+    <div class="stat-value"><%= active_guests %></div>
+    <div class="stat-detail">Su an konaklayanlar</div>
+  </div>
+  <div class="stat-card accent-amber">
+    <div class="stat-label">Toplam Gelir</div>
+    <div class="stat-value">₺<%= formatCurrency(total_revenue) %></div>
+    <div class="stat-detail">Onayli odemeler</div>
+  </div>
+</div>
+
+<div class="secondary-stat-grid">
+  <div class="secondary-stat">
+    <span class="sec-label">Bugun Check-in</span>
+    <span class="sec-value blue"><%= today_checkins %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Bugun Check-out</span>
+    <span class="sec-value orange"><%= today_checkouts %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Musait Oda</span>
+    <span class="sec-value green"><%= available_rooms %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Temizleniyor</span>
+    <span class="sec-value gray"><%= cleaning_rooms %></span>
+  </div>
+</div>
+
+<div class="card-section">
+  <div class="section-header">
+    <h2 class="section-title">Son Rezervasyonlar</h2>
+    <a href="/reservations" class="section-link">Tumunu gor →</a>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Misafir</th>
+          <th>Oda</th>
+          <th>Giris</th>
+          <th>Cikis</th>
+          <th>Tutar</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recent_reservations.forEach((res) => { %>
+          <tr>
+            <td class="mono">#<%= 1000 + res.id %></td>
+            <td><%= res.first_name %> <%= res.last_name %></td>
+            <td><%= res.room_number %> <span class="room-type-tag"><%= res.room_type %></span></td>
+            <td><%= formatDateShort(res.check_in_date) %></td>
+            <td><%= formatDateShort(res.check_out_date) %></td>
+            <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
+            <td>
+              <% if (res.status === "confirmed") { %><span class="badge badge-blue">Onayli</span>
+              <% } else if (res.status === "checked_in") { %><span class="badge badge-green">Check-in</span>
+              <% } else if (res.status === "checked_out") { %><span class="badge badge-gray">Check-out</span>
+              <% } else if (res.status === "cancelled") { %><span class="badge badge-red">Iptal</span><% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>

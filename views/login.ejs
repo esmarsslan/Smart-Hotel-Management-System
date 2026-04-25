@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giris - Grand Hotel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="login-body">
+  <div class="login-layout">
+    <div class="login-left">
+      <div class="login-brand">
+        <div class="brand-icon large">GH</div>
+        <div class="login-brand-text">Grand Hotel</div>
+      </div>
+      <div class="login-tagline">Akilli Otel Yonetim Sistemi</div>
+      <div class="login-features">
+        <div class="feat-item">Rezervasyon Yonetimi</div>
+        <div class="feat-item">Check-in / Check-out</div>
+        <div class="feat-item">Oda ve Misafir Takibi</div>
+        <div class="feat-item">Odeme Islemleri</div>
+      </div>
+    </div>
+
+    <div class="login-right">
+      <div class="login-card">
+        <div class="login-card-title">Hos Geldiniz</div>
+        <div class="login-card-sub">Sisteme giris yapin</div>
+
+        <% if (flash) { %>
+          <div class="alert-toast alert-<%= flash.type %>" style="margin-bottom: 16px;"><%= flash.text %></div>
+        <% } %>
+
+        <form method="POST" action="/login">
+          <div class="form-group-custom mb-3">
+            <label>Kullanici Adi</label>
+            <input type="text" name="username" class="form-control-custom" placeholder="kullanici.adi" required autofocus>
+          </div>
+          <div class="form-group-custom mb-4">
+            <label>Sifre</label>
+            <input type="password" name="password" class="form-control-custom" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-primary-custom w-100">Giris Yap</button>
+        </form>
+
+        <div class="login-demo-accounts">
+          <div class="demo-title">Demo Hesaplar</div>
+          <div class="demo-row"><span class="demo-role">Admin</span><span class="demo-cred">admin / admin123</span></div>
+          <div class="demo-row"><span class="demo-role">Resepsiyon</span><span class="demo-cred">resepsiyon / res123</span></div>
+          <div class="demo-row"><span class="demo-role">Mudur</span><span class="demo-cred">yonetici / yon123</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

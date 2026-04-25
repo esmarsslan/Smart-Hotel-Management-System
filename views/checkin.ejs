@@ -1,0 +1,124 @@
+<div class="checkin-layout">
+  <div class="card-section">
+    <div class="section-header">
+      <h2 class="section-title">Bugun Check-in Bekleyenler</h2>
+      <span class="count-badge blue"><%= pending_checkins.length %></span>
+    </div>
+    <% if (pending_checkins.length) { %>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr><th>Misafir</th><th>Oda</th><th>Kisi</th><th>Tutar</th><th></th></tr>
+          </thead>
+          <tbody>
+            <% pending_checkins.forEach((res) => { %>
+              <tr>
+                <td>
+                  <div class="guest-name-cell">
+                    <div class="guest-avatar"><%= res.first_name[0] %><%= res.last_name[0] %></div>
+                    <div>
+                      <div><%= res.first_name %> <%= res.last_name %></div>
+                      <div style="font-size: 12px; color: var(--text-muted);"><%= res.phone || "" %></div>
+                    </div>
+                  </div>
+                </td>
+                <td><strong><%= res.room_number %></strong> <span class="room-type-tag"><%= res.room_type %></span></td>
+                <td><%= res.num_guests %> kisi</td>
+                <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
+                <td>
+                  <form method="POST" action="/checkin">
+                    <input type="hidden" name="reservation_id" value="<%= res.id %>">
+                    <input type="hidden" name="action" value="checkin">
+                    <button type="submit" class="btn-action-green">Check-in Yap ✓</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">Bugun bekleyen check-in yok.</div>
+    <% } %>
+  </div>
+
+  <div class="card-section">
+    <div class="section-header">
+      <h2 class="section-title">Check-out Bekleyenler</h2>
+      <span class="count-badge orange"><%= pending_checkouts.length %></span>
+    </div>
+    <% if (pending_checkouts.length) { %>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr><th>Misafir</th><th>Oda</th><th>Giris</th><th>Tutar</th><th></th></tr>
+          </thead>
+          <tbody>
+            <% pending_checkouts.forEach((res) => { %>
+              <tr>
+                <td>
+                  <div class="guest-name-cell">
+                    <div class="guest-avatar"><%= res.first_name[0] %><%= res.last_name[0] %></div>
+                    <%= res.first_name %> <%= res.last_name %>
+                  </div>
+                </td>
+                <td><strong><%= res.room_number %></strong></td>
+                <td><%= formatDateShort(res.check_in_date) %></td>
+                <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
+                <td>
+                  <form method="POST" action="/checkin">
+                    <input type="hidden" name="reservation_id" value="<%= res.id %>">
+                    <input type="hidden" name="action" value="checkout">
+                    <button type="submit" class="btn-action-orange">Check-out Yap →</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">Bugun bekleyen check-out yok.</div>
+    <% } %>
+  </div>
+
+  <div class="card-section">
+    <div class="section-header">
+      <h2 class="section-title">Su An Konaklayanlar</h2>
+      <span class="count-badge green"><%= active_stays.length %></span>
+    </div>
+    <% if (active_stays.length) { %>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr><th>Misafir</th><th>Oda</th><th>Giris</th><th>Cikis</th><th>Kalan</th><th>Durum</th></tr>
+          </thead>
+          <tbody>
+            <% active_stays.forEach((res) => { %>
+              <% const remaining = Math.floor((new Date(res.check_out_date) - new Date(today)) / (1000 * 60 * 60 * 24)); %>
+              <tr>
+                <td>
+                  <div class="guest-name-cell">
+                    <div class="guest-avatar sm"><%= res.first_name[0] %><%= res.last_name[0] %></div>
+                    <%= res.first_name %> <%= res.last_name %>
+                  </div>
+                </td>
+                <td><strong><%= res.room_number %></strong> <span class="room-type-tag"><%= res.room_type %></span></td>
+                <td><%= formatDateShort(res.check_in_date) %></td>
+                <td><%= formatDateShort(res.check_out_date) %></td>
+                <td>
+                  <% if (remaining <= 0) { %><span class="badge badge-orange">Bugun cikis</span>
+                  <% } else if (remaining === 1) { %><span class="badge badge-orange">Yarin cikis</span>
+                  <% } else { %><span class="badge badge-blue"><%= remaining %> gun</span><% } %>
+                </td>
+                <td><span class="badge badge-green">Konaklamada</span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">Su an konaklayan misafir yok.</div>
+    <% } %>
+  </div>
+</div>

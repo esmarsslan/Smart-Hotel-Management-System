@@ -1,0 +1,124 @@
+<div class="secondary-stat-grid">
+  <div class="secondary-stat">
+    <span class="sec-label">Musait</span>
+    <span class="sec-value green"><%= stats.available %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Dolu</span>
+    <span class="sec-value blue"><%= stats.occupied %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Temizlik</span>
+    <span class="sec-value orange"><%= stats.cleaning %></span>
+  </div>
+  <div class="secondary-stat">
+    <span class="sec-label">Bakim</span>
+    <span class="sec-value gray"><%= stats.maintenance %></span>
+  </div>
+</div>
+
+<div class="filter-tabs">
+  <a href="/rooms" class="filter-tab <%= filter_status === 'all' ? 'active' : '' %>">
+    Tumu <span class="tab-count"><%= rooms.length %></span>
+  </a>
+  <a href="/rooms?status=available" class="filter-tab <%= filter_status === 'available' ? 'active' : '' %>">
+    Musait <span class="tab-count green"><%= stats.available %></span>
+  </a>
+  <a href="/rooms?status=occupied" class="filter-tab <%= filter_status === 'occupied' ? 'active' : '' %>">
+    Dolu <span class="tab-count blue"><%= stats.occupied %></span>
+  </a>
+  <a href="/rooms?status=cleaning" class="filter-tab <%= filter_status === 'cleaning' ? 'active' : '' %>">
+    Temizlik <span class="tab-count orange"><%= stats.cleaning %></span>
+  </a>
+  <a href="/rooms?status=maintenance" class="filter-tab <%= filter_status === 'maintenance' ? 'active' : '' %>">
+    Bakim <span class="tab-count"><%= stats.maintenance %></span>
+  </a>
+</div>
+
+<div class="rooms-grid">
+  <% if (rooms.length === 0) { %>
+    <div class="card-section" style="grid-column: 1 / -1">
+      <div class="empty-state">Bu filtre icin oda bulunamadi.</div>
+    </div>
+  <% } %>
+  <% rooms.forEach((room) => { %>
+    <div class="room-card status-<%= room.status %>">
+      <div class="room-header">
+        <div class="room-number"><%= room.room_number %></div>
+        <% if (room.status === "available") { %><span class="badge badge-green">Musait</span>
+        <% } else if (room.status === "occupied") { %><span class="badge badge-blue">Dolu</span>
+        <% } else if (room.status === "cleaning") { %><span class="badge badge-orange">Temizlik</span>
+        <% } else { %><span class="badge badge-red">Bakim</span><% } %>
+      </div>
+
+      <div class="room-type"><%= room.room_type %></div>
+      <div class="room-meta">
+        <span>Kat <%= room.floor || "-" %></span>
+        <span><%= room.capacity %> Kisi</span>
+      </div>
+      <div class="room-price">
+        ₺<%= formatCurrency(room.price_per_night) %> <span>/ gece</span>
+      </div>
+
+      <div class="room-actions">
+        <form method="POST" action="/rooms/update-status/<%= room.id %>" style="display: flex; flex: 1; gap: 6px">
+          <select name="status" class="status-select">
+            <option value="available" <%= room.status === "available" ? "selected" : "" %>>Musait</option>
+            <option value="occupied" <%= room.status === "occupied" ? "selected" : "" %>>Dolu</option>
+            <option value="cleaning" <%= room.status === "cleaning" ? "selected" : "" %>>Temizlik</option>
+            <option value="maintenance" <%= room.status === "maintenance" ? "selected" : "" %>>Bakim</option>
+          </select>
+          <button type="submit" class="btn-secondary-custom">Guncelle</button>
+        </form>
+        <form method="POST" action="/rooms/delete/<%= room.id %>" onsubmit="return confirm('Bu odayi silmek istediginize emin misiniz?');">
+          <button type="submit" class="btn-icon-danger" title="Odayi Sil">✕</button>
+        </form>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="modal-overlay" id="addRoomModal" style="display: none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Yeni Oda Ekle</h3>
+      <button class="modal-close" onclick="closeModal('addRoomModal')">✕</button>
+    </div>
+    <form method="POST" action="/rooms">
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Oda Numarasi</label>
+          <input type="text" name="room_number" class="form-control-custom" placeholder="301" required />
+        </div>
+        <div class="form-group-custom">
+          <label>Oda Tipi</label>
+          <select name="room_type" class="form-control-custom" required>
+            <option value="">- Secin -</option>
+            <option value="Standart">Standart</option>
+            <option value="Deluxe">Deluxe</option>
+            <option value="Suite">Suite</option>
+            <option value="Penthouse">Penthouse</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Kisi Kapasitesi</label>
+          <input type="number" name="capacity" class="form-control-custom" min="1" value="2" required />
+        </div>
+        <div class="form-group-custom">
+          <label>Kat</label>
+          <input type="number" name="floor" class="form-control-custom" min="1" value="1" required />
+        </div>
+      </div>
+      <div class="form-group-custom">
+        <label>Gecelik Ucret (₺)</label>
+        <input type="number" name="price" class="form-control-custom" min="1" placeholder="1500" required />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary-custom" onclick="closeModal('addRoomModal')">Iptal</button>
+        <button type="submit" class="btn-primary-custom">Odayi Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>

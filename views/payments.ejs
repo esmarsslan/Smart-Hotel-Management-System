@@ -1,0 +1,99 @@
+<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="stat-card accent-green">
+    <div class="stat-label">Toplam Tahsilat</div>
+    <div class="stat-value">₺<%= formatCurrency(total_paid) %></div>
+    <div class="stat-detail">Onayli odemeler</div>
+  </div>
+  <div class="stat-card accent-amber">
+    <div class="stat-label">Bekleyen Odemeler</div>
+    <div class="stat-value">₺<%= formatCurrency(total_pending) %></div>
+    <div class="stat-detail">Tahsil edilmemis</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Toplam Islem</div>
+    <div class="stat-value"><%= payments.length %></div>
+    <div class="stat-detail">Kayitli odeme</div>
+  </div>
+</div>
+
+<div class="card-section">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Rezervasyon</th>
+          <th>Misafir</th>
+          <th>Tutar</th>
+          <th>Yontem</th>
+          <th>Tarih</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (payments.length === 0) { %>
+          <tr>
+            <td colspan="7" style="text-align:center; padding: 32px; color: var(--text-muted);">Odeme kaydi bulunamadi.</td>
+          </tr>
+        <% } %>
+        <% payments.forEach((payment) => { %>
+          <tr>
+            <td class="mono">#<%= payment.id %></td>
+            <td class="mono">#<%= 1000 + payment.reservation_id %></td>
+            <td><%= payment.first_name %> <%= payment.last_name %></td>
+            <td class="mono"><strong>₺<%= formatCurrency(payment.amount) %></strong></td>
+            <td>
+              <% if (payment.method === "card") { %><span class="method-tag card">Kredi Karti</span>
+              <% } else if (payment.method === "cash") { %><span class="method-tag cash">Nakit</span>
+              <% } else { %><span class="method-tag transfer">Havale</span><% } %>
+            </td>
+            <td><%= payment.paid_at ? formatDateTime(payment.paid_at) : "-" %></td>
+            <td>
+              <% if (payment.status === "paid") { %><span class="badge badge-green">Odendi</span>
+              <% } else if (payment.status === "pending") { %><span class="badge badge-orange">Bekliyor</span>
+              <% } else { %><span class="badge badge-red">Iade</span><% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addPayModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Odeme Kaydet</h3>
+      <button class="modal-close" onclick="closeModal('addPayModal')">✕</button>
+    </div>
+    <form method="POST" action="/payments">
+      <div class="form-group-custom">
+        <label>Rezervasyon</label>
+        <select name="reservation_id" class="form-control-custom" required>
+          <option value="">- Rezervasyon Secin -</option>
+          <% pending_reservations.forEach((res) => { %>
+            <option value="<%= res.id %>">#<%= 1000 + res.id %> - <%= res.first_name %> <%= res.last_name %> (₺<%= formatCurrency(res.total_amount || 0) %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Tutar (₺)</label>
+          <input type="number" name="amount" class="form-control-custom" placeholder="1500" required>
+        </div>
+        <div class="form-group-custom">
+          <label>Odeme Yontemi</label>
+          <select name="method" class="form-control-custom">
+            <option value="card">Kredi Karti</option>
+            <option value="cash">Nakit</option>
+            <option value="transfer">Havale</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary-custom" onclick="closeModal('addPayModal')">Iptal</button>
+        <button type="submit" class="btn-primary-custom">Odemeyi Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>

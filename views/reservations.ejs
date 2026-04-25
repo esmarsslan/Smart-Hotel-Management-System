@@ -1,0 +1,129 @@
+<div class="filter-tabs">
+  <a href="/reservations" class="filter-tab <%= filter_status === 'all' ? 'active' : '' %>">Tumu</a>
+  <a href="/reservations?status=confirmed" class="filter-tab <%= filter_status === 'confirmed' ? 'active' : '' %>">Onayli</a>
+  <a href="/reservations?status=checked_in" class="filter-tab <%= filter_status === 'checked_in' ? 'active' : '' %>">Check-in</a>
+  <a href="/reservations?status=checked_out" class="filter-tab <%= filter_status === 'checked_out' ? 'active' : '' %>">Check-out</a>
+  <a href="/reservations?status=cancelled" class="filter-tab <%= filter_status === 'cancelled' ? 'active' : '' %>">Iptal</a>
+</div>
+
+<div class="card-section">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Misafir</th>
+          <th>Oda</th>
+          <th>Giris</th>
+          <th>Cikis</th>
+          <th>Gece</th>
+          <th>Tutar</th>
+          <th>Odeme</th>
+          <th>Durum</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (reservations.length === 0) { %>
+          <tr>
+            <td colspan="10" style="text-align:center; padding: 32px; color: var(--text-muted);">Rezervasyon bulunamadi.</td>
+          </tr>
+        <% } %>
+        <% reservations.forEach((res) => { %>
+          <% const nights = Math.max(0, Math.floor((new Date(res.check_out_date) - new Date(res.check_in_date)) / (1000 * 60 * 60 * 24))); %>
+          <tr>
+            <td class="mono">#<%= 1000 + res.id %></td>
+            <td>
+              <div class="guest-name-cell">
+                <div class="guest-avatar sm"><%= res.first_name[0] %><%= res.last_name[0] %></div>
+                <%= res.first_name %> <%= res.last_name %>
+              </div>
+            </td>
+            <td>
+              <strong><%= res.room_number %></strong>
+              <span class="room-type-tag"><%= res.room_type %></span>
+            </td>
+            <td><%= formatDate(res.check_in_date) %></td>
+            <td><%= formatDate(res.check_out_date) %></td>
+            <td class="mono"><%= nights %></td>
+            <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
+            <td>
+              <% if (res.has_paid) { %><span class="badge badge-green">Odendi</span>
+              <% } else { %><span class="badge badge-orange">Bekliyor</span><% } %>
+            </td>
+            <td>
+              <% if (res.status === "confirmed") { %><span class="badge badge-blue">Onayli</span>
+              <% } else if (res.status === "checked_in") { %><span class="badge badge-green">Check-in</span>
+              <% } else if (res.status === "checked_out") { %><span class="badge badge-gray">Tamamlandi</span>
+              <% } else if (res.status === "cancelled") { %><span class="badge badge-red">Iptal</span><% } %>
+            </td>
+            <td>
+              <% if (res.status === "confirmed" || res.status === "checked_in") { %>
+                <form method="POST" action="/reservations/cancel/<%= res.id %>" onsubmit="return confirm('Rezervasyonu iptal etmek istediginize emin misiniz?')">
+                  <button type="submit" class="btn-icon-danger" title="Iptal Et">✕</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addResModal" style="display:none;">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3>Yeni Rezervasyon</h3>
+      <button class="modal-close" onclick="closeModal('addResModal')">✕</button>
+    </div>
+    <form method="POST" action="/reservations">
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Misafir</label>
+          <select name="guest_id" class="form-control-custom" required>
+            <option value="">- Misafir Secin -</option>
+            <% guests.forEach((guest) => { %>
+              <option value="<%= guest.id %>"><%= guest.first_name %> <%= guest.last_name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group-custom">
+          <label>Oda</label>
+          <select name="room_id" class="form-control-custom" required>
+            <option value="">- Oda Secin -</option>
+            <% rooms.forEach((room) => { %>
+              <option value="<%= room.id %>"><%= room.room_number %> - <%= room.room_type %> (₺<%= formatCurrency(room.price_per_night) %>/gece)</option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Giris Tarihi</label>
+          <input type="date" name="check_in_date" class="form-control-custom" required min="<%= toInputDate(today) %>">
+        </div>
+        <div class="form-group-custom">
+          <label>Cikis Tarihi</label>
+          <input type="date" name="check_out_date" class="form-control-custom" required min="<%= toInputDate(today) %>">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Kisi Sayisi</label>
+          <select name="num_guests" class="form-control-custom">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+        </div>
+        <div class="form-group-custom">
+          <label>Notlar (opsiyonel)</label>
+          <input type="text" name="notes" class="form-control-custom" placeholder="Ozel istek...">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary-custom" onclick="closeModal('addResModal')">Iptal</button>
+        <button type="submit" class="btn-primary-custom">Rezervasyon Olustur</button>
+      </div>
+    </form>
+  </div>
+</div>

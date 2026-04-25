@@ -1,0 +1,99 @@
+<form method="GET" action="/guests" class="search-bar">
+  <input type="text" name="search" value="<%= search %>" placeholder="Ad, soyad veya TC no ile ara..." class="search-input">
+  <button type="submit" class="btn-primary-custom">Ara</button>
+  <% if (search) { %><a href="/guests" class="btn-secondary-custom">Temizle</a><% } %>
+</form>
+
+<div class="card-section">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ad Soyad</th>
+          <th>TC / Pasaport</th>
+          <th>Telefon</th>
+          <th>E-posta</th>
+          <th>Uyruk</th>
+          <th>Kayit Tarihi</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (guests.length === 0) { %>
+          <tr>
+            <td colspan="8" style="text-align:center; padding: 32px; color: var(--text-muted);">
+              <%= search ? "Arama sonucu bulunamadi." : "Henuz misafir kaydi yok." %>
+            </td>
+          </tr>
+        <% } %>
+        <% guests.forEach((guest) => { %>
+          <tr>
+            <td class="mono">#<%= guest.id %></td>
+            <td>
+              <div class="guest-name-cell">
+                <div class="guest-avatar"><%= guest.first_name[0] %><%= guest.last_name[0] %></div>
+                <%= guest.first_name %> <%= guest.last_name %>
+              </div>
+            </td>
+            <td class="mono"><%= guest.id_number || "-" %></td>
+            <td><%= guest.phone || "-" %></td>
+            <td><%= guest.email || "-" %></td>
+            <td><%= guest.nationality || "-" %></td>
+            <td><%= formatDate(guest.created_at) %></td>
+            <td>
+              <form method="POST" action="/guests/delete/<%= guest.id %>" onsubmit="return confirm('Bu misafiri silmek istediginize emin misiniz?')">
+                <button type="submit" class="btn-icon-danger">✕</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addGuestModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Yeni Misafir Kaydi</h3>
+      <button class="modal-close" onclick="closeModal('addGuestModal')">✕</button>
+    </div>
+    <form method="POST" action="/guests">
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>Ad</label>
+          <input type="text" name="first_name" class="form-control-custom" placeholder="Mehmet" required>
+        </div>
+        <div class="form-group-custom">
+          <label>Soyad</label>
+          <input type="text" name="last_name" class="form-control-custom" placeholder="Kaya" required>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>TC / Pasaport No</label>
+          <input type="text" name="id_number" class="form-control-custom" placeholder="12345678901">
+        </div>
+        <div class="form-group-custom">
+          <label>Telefon</label>
+          <input type="text" name="phone" class="form-control-custom" placeholder="0532 xxx xx xx">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-custom">
+          <label>E-posta</label>
+          <input type="email" name="email" class="form-control-custom" placeholder="misafir@email.com">
+        </div>
+        <div class="form-group-custom">
+          <label>Uyruk</label>
+          <input type="text" name="nationality" class="form-control-custom" placeholder="Turkiye" value="Turkiye">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary-custom" onclick="closeModal('addGuestModal')">Iptal</button>
+        <button type="submit" class="btn-primary-custom">Misafiri Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
