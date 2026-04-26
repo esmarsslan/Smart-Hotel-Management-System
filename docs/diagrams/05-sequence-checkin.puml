@@ -1,0 +1,56 @@
+@startuml CheckinSequenceDiagram
+title Sequence Diagram - Check-in (UC-10)
+
+actor Receptionist as R
+participant "Browser\n(UI)" as B
+participant "Server\n(Express)" as S
+participant "Auth\nMiddleware" as A
+database "MySQL" as DB
+
+R -> B  : "Check-in" butonuna basar
+B -> S  : POST /checkin\n{reservation_id, action='checkin'}
+activate S
+
+S -> A  : ensureAuth(req)
+activate A
+A --> S : OK (login basarili)
+deactivate A
+
+S -> A  : requireRole('manager','receptionist')
+activate A
+A --> S : OK (rol uygun)
+deactivate A
+
+S -> DB : SELECT id, status, room_id\nFROM reservations WHERE id=?
+activate DB
+DB --> S : {id, status, room_id}
+deactivate DB
+
+alt status === 'confirmed' (Ana Akis)
+  S -> DB : UPDATE reservations\nSET status='checked_in' WHERE id=?
+  activate DB
+  DB --> S : OK
+  deactivate DB
+
+  S -> DB : UPDATE rooms\nSET status='occupied' WHERE id=?
+  activate DB
+  DB --> S : OK
+  deactivate DB
+
+  S --> B : 302 Redirect /checkin\nflash="Check-in tamamlandi"
+  B -> S  : GET /checkin
+  S -> DB : SELECT pending_checkins,\nactive_stays...
+  activate DB
+  DB --> S : rows
+  deactivate DB
+  S --> B : 200 OK\nrender checkin.ejs
+  B --> R : Yesil basari mesaji
+else status !== 'confirmed' (BR-05 ihlali)
+  S --> B : 302 Redirect /checkin\nflash="BR-05: ..."
+  B -> S  : GET /checkin
+  S --> B : 200 OK\nrender checkin.ejs
+  B --> R : Kirmizi hata mesaji
+end
+deactivate S
+
+@enduml

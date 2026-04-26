@@ -1,0 +1,70 @@
+@startuml SmartHotelERDiagram
+title Database (ER) Diagram - Smart Hotel Management System
+
+skinparam linetype ortho
+
+entity "users" as users {
+  * id : INT <<PK>>
+  --
+  * username : VARCHAR(80) <<UNIQUE>>
+  * password : VARCHAR(255)
+  * role : VARCHAR(20)
+  full_name : VARCHAR(100)
+  created_at : TIMESTAMP
+}
+
+entity "rooms" as rooms {
+  * id : INT <<PK>>
+  --
+  * room_number : VARCHAR(10) <<UNIQUE>>
+  * room_type : VARCHAR(30)
+  * capacity : INT
+  * price_per_night : DECIMAL(10,2)
+  * status : VARCHAR(20)
+  floor : INT
+  description : VARCHAR(200)
+  created_at : TIMESTAMP
+}
+
+entity "guests" as guests {
+  * id : INT <<PK>>
+  --
+  * first_name : VARCHAR(50)
+  * last_name : VARCHAR(50)
+  id_number : VARCHAR(20)
+  phone : VARCHAR(20)
+  email : VARCHAR(100)
+  nationality : VARCHAR(50)
+  created_at : TIMESTAMP
+}
+
+entity "reservations" as reservations {
+  * id : INT <<PK>>
+  --
+  * guest_id : INT <<FK>>
+  * room_id : INT <<FK>>
+  * check_in_date : DATE
+  * check_out_date : DATE
+  * num_guests : INT
+  * status : VARCHAR(20)
+  total_amount : DECIMAL(10,2)
+  notes : VARCHAR(300)
+  created_at : TIMESTAMP
+}
+
+entity "payments" as payments {
+  * id : INT <<PK>>
+  --
+  * reservation_id : INT <<FK>>
+  * amount : DECIMAL(10,2)
+  method : VARCHAR(20)
+  * status : VARCHAR(20)
+  paid_at : DATETIME
+  created_at : TIMESTAMP
+}
+
+guests       ||--o{ reservations : "has"
+rooms        ||--o{ reservations : "booked"
+reservations ||--o{ payments     : "settled by"
+
+@enduml

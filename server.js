@@ -6,7 +6,7 @@ const session = require("express-session");
 const expressLayouts = require("express-ejs-layouts");
 const bcrypt = require("bcryptjs");
 const { pool } = require("./src/db");
-const { ensureAuth, injectAuth } = require("./src/middleware/auth");
+const { ensureAuth, injectAuth, requireRole } = require("./src/middleware/auth");
 const {
   formatCurrency,
   formatDate,
@@ -54,21 +54,32 @@ function pullFlash(req) {
   return flash;
 }
 
+async function ensureMissingUsers() {
+  await pool.query("UPDATE users SET role = 'manager' WHERE role = 'admin'");
+
+  const defaults = [
+    { username: "yonetici", password: "yon123", role: "manager", full_name: "Zeynep Kara" },
+    { username: "resepsiyon", password: "res123", role: "receptionist", full_name: "Ahmet Yilmaz" },
+    { username: "temizlik", password: "temz123", role: "housekeeping", full_name: "Ayse Celik" },
+  ];
+  for (const u of defaults) {
+    const [exists] = await pool.query("SELECT id FROM users WHERE username = ? LIMIT 1", [u.username]);
+    if (exists.length === 0) {
+      await pool.query(
+        "INSERT INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)",
+        [u.username, await bcrypt.hash(u.password, 10), u.role, u.full_name]
+      );
+    }
+  }
+}
+
 async function seedDatabase() {
-  const [userRows] = await pool.query("SELECT COUNT(*) AS total FROM users");
-  if (userRows[0].total > 0) {
+  await ensureMissingUsers();
+
+  const [roomRows] = await pool.query("SELECT COUNT(*) AS total FROM rooms");
+  if (roomRows[0].total > 0) {
     return;
   }
-
-  const users = [
-    ["admin", await bcrypt.hash("admin123", 10), "admin", "Sistem Yoneticisi"],
-    ["resepsiyon", await bcrypt.hash("res123", 10), "receptionist", "Ahmet Yilmaz"],
-    ["yonetici", await bcrypt.hash("yon123", 10), "manager", "Zeynep Kara"],
-  ];
-  await pool.query(
-    "INSERT INTO users (username, password, role, full_name) VALUES ?",
-    [users]
-  );
 
   const rooms = [
     ["101", "Standart", 2, 800, "available", 1, null],
@@ -257,11 +268,14 @@ app.get("/rooms", ensureAuth, async (req, res) => {
     "SELECT COUNT(*) AS total FROM rooms WHERE status = 'maintenance'"
   );
 
+  const canManageRooms = req.session.user.role === "manager";
   return res.render("rooms", {
     pageTitle: "Odalar",
     pageSub: "Oda durumlarini goruntule ve yonet",
-    topbarRight:
-      '<button class="btn-primary-custom" onclick="openModal(\'addRoomModal\')">+ Oda Ekle</button>',
+    topbarRight: canManageRooms
+      ? '<button class="btn-primary-custom" onclick="openModal(\'addRoomModal\')">+ Oda Ekle</button>'
+      : "",
+    canManageRooms,
     flash: pullFlash(req),
     rooms: allRooms,
     stats: {
@@ -274,7 +288,7 @@ app.get("/rooms", ensureAuth, async (req, res) => {
   });
 });
 
-app.post("/rooms", ensureAuth, async (req, res) => {
+app.post("/rooms", ensureAuth, requireRole("manager"), async (req, res) => {
   const { room_number, room_type, capacity, price, floor } = req.body;
   await pool.query(
     "INSERT INTO rooms (room_number, room_type, capacity, price_per_night, floor, status) VALUES (?, ?, ?, ?, ?, 'available')",
@@ -284,7 +298,7 @@ app.post("/rooms", ensureAuth, async (req, res) => {
   return res.redirect("/rooms");
 });
 
-app.post("/rooms/update-status/:roomId", ensureAuth, async (req, res) => {
+app.post("/rooms/update-status/:roomId", ensureAuth, requireRole("manager", "receptionist", "housekeeping"), async (req, res) => {
   await pool.query("UPDATE rooms SET status = ? WHERE id = ?", [
     req.body.status,
     Number(req.params.roomId),
@@ -293,13 +307,13 @@ app.post("/rooms/update-status/:roomId", ensureAuth, async (req, res) => {
   return res.redirect("/rooms");
 });
 
-app.post("/rooms/delete/:roomId", ensureAuth, async (req, res) => {
+app.post("/rooms/delete/:roomId", ensureAuth, requireRole("manager"), async (req, res) => {
   await pool.query("DELETE FROM rooms WHERE id = ?", [Number(req.params.roomId)]);
   setFlash(req, "success", "Oda silindi.");
   return res.redirect("/rooms");
 });
 
-app.get("/guests", ensureAuth, async (req, res) => {
+app.get("/guests", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const search = (req.query.search || "").trim();
   let guests;
   if (search) {
@@ -316,6 +330,7 @@ app.get("/guests", ensureAuth, async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM guests ORDER BY created_at DESC");
     guests = rows;
   }
+  const canDeleteGuest = req.session.user.role === "manager";
   return res.render("guests", {
     pageTitle: "Misafirler",
     pageSub: "Kayitli misafir listesi",
@@ -324,10 +339,11 @@ app.get("/guests", ensureAuth, async (req, res) => {
     flash: pullFlash(req),
     guests,
     search,
+    canDeleteGuest,
   });
 });
 
-app.post("/guests", ensureAuth, async (req, res) => {
+app.post("/guests", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const { first_name, last_name, id_number, phone, email, nationality } = req.body;
   await pool.query(
     `
@@ -340,13 +356,27 @@ app.post("/guests", ensureAuth, async (req, res) => {
   return res.redirect("/guests");
 });
 
-app.post("/guests/delete/:guestId", ensureAuth, async (req, res) => {
-  await pool.query("DELETE FROM guests WHERE id = ?", [Number(req.params.guestId)]);
+app.post("/guests/delete/:guestId", ensureAuth, requireRole("manager"), async (req, res) => {
+  const guestId = Number(req.params.guestId);
+  const [[active]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM reservations
+     WHERE guest_id = ? AND status IN ('confirmed', 'checked_in')`,
+    [guestId]
+  );
+  if (Number(active.total) > 0) {
+    setFlash(
+      req,
+      "error",
+      "BR-10: Bu misafirin aktif rezervasyonu var, silinemez. Once rezervasyonu iptal edin veya cikis yaptirin."
+    );
+    return res.redirect("/guests");
+  }
+  await pool.query("DELETE FROM guests WHERE id = ?", [guestId]);
   setFlash(req, "success", "Misafir silindi.");
   return res.redirect("/guests");
 });
 
-app.get("/reservations", ensureAuth, async (req, res) => {
+app.get("/reservations", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const filterStatus = req.query.status || "all";
   const [reservations] =
     filterStatus === "all"
@@ -402,29 +432,67 @@ app.get("/reservations", ensureAuth, async (req, res) => {
   });
 });
 
-app.post("/reservations", ensureAuth, async (req, res) => {
-  const [roomRows] = await pool.query("SELECT * FROM rooms WHERE id = ? LIMIT 1", [
-    Number(req.body.room_id),
-  ]);
-  const room = roomRows[0];
+app.post("/reservations", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
+  const guestId = Number(req.body.guest_id);
+  const roomId = Number(req.body.room_id);
+  const numGuests = Number(req.body.num_guests);
   const checkIn = new Date(req.body.check_in_date);
   const checkOut = new Date(req.body.check_out_date);
+
+  if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
+    setFlash(req, "error", "Gecersiz tarih girisi.");
+    return res.redirect("/reservations");
+  }
+  if (checkOut <= checkIn) {
+    setFlash(req, "error", "BR-02: Cikis tarihi giris tarihinden sonra olmalidir.");
+    return res.redirect("/reservations");
+  }
+
+  const [roomRows] = await pool.query("SELECT * FROM rooms WHERE id = ? LIMIT 1", [roomId]);
+  const room = roomRows[0];
+  if (!room) {
+    setFlash(req, "error", "Secilen oda bulunamadi.");
+    return res.redirect("/reservations");
+  }
+  if (room.status === "maintenance") {
+    setFlash(req, "error", `BR-01: ${room.room_number} numarali oda bakimda, rezervasyon yapilamaz.`);
+    return res.redirect("/reservations");
+  }
+
+  if (numGuests > room.capacity) {
+    setFlash(req, "error", `BR-03: Misafir sayisi (${numGuests}) odanin kapasitesini (${room.capacity}) asiyor.`);
+    return res.redirect("/reservations");
+  }
+
+  const [conflicts] = await pool.query(
+    `SELECT id FROM reservations
+     WHERE room_id = ?
+       AND status IN ('confirmed', 'checked_in')
+       AND NOT (check_out_date <= ? OR check_in_date >= ?)
+     LIMIT 1`,
+    [roomId, toInputDate(checkIn), toInputDate(checkOut)]
+  );
+  if (conflicts.length > 0) {
+    setFlash(req, "error", `BR-01: ${room.room_number} numarali oda bu tarihlerde dolu.`);
+    return res.redirect("/reservations");
+  }
+
   const nights = Math.max(
     0,
     Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
   );
-  const total = room ? nights * Number(room.price_per_night) : 0;
+  const total = nights * Number(room.price_per_night);
   await pool.query(
     `
     INSERT INTO reservations (guest_id, room_id, check_in_date, check_out_date, num_guests, status, total_amount, notes)
     VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?)
   `,
     [
-      Number(req.body.guest_id),
-      Number(req.body.room_id),
+      guestId,
+      roomId,
       toInputDate(checkIn),
       toInputDate(checkOut),
-      Number(req.body.num_guests),
+      numGuests,
       total,
       req.body.notes || null,
     ]
@@ -433,20 +501,26 @@ app.post("/reservations", ensureAuth, async (req, res) => {
   return res.redirect("/reservations");
 });
 
-app.post("/reservations/cancel/:reservationId", ensureAuth, async (req, res) => {
+app.post("/reservations/cancel/:reservationId", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const reservationId = Number(req.params.reservationId);
-  await pool.query("UPDATE reservations SET status = 'cancelled' WHERE id = ?", [reservationId]);
-  const [[resRow]] = await pool.query("SELECT room_id FROM reservations WHERE id = ? LIMIT 1", [
-    reservationId,
-  ]);
-  if (resRow) {
-    await pool.query("UPDATE rooms SET status = 'available' WHERE id = ?", [resRow.room_id]);
+  const [[resRow]] = await pool.query(
+    "SELECT id, status FROM reservations WHERE id = ? LIMIT 1",
+    [reservationId]
+  );
+  if (!resRow) {
+    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    return res.redirect("/reservations");
   }
+  if (resRow.status !== "confirmed") {
+    setFlash(req, "error", "Sadece onaylanmis (confirmed) rezervasyonlar iptal edilebilir.");
+    return res.redirect("/reservations");
+  }
+  await pool.query("UPDATE reservations SET status = 'cancelled' WHERE id = ?", [reservationId]);
   setFlash(req, "success", "Rezervasyon iptal edildi.");
   return res.redirect("/reservations");
 });
 
-app.get("/checkin", ensureAuth, async (req, res) => {
+app.get("/checkin", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const [pendingCheckins] = await pool.query(`
     SELECT r.*, g.first_name, g.last_name, g.phone, rm.room_number, rm.room_type
     FROM reservations r
@@ -482,28 +556,48 @@ app.get("/checkin", ensureAuth, async (req, res) => {
   });
 });
 
-app.post("/checkin", ensureAuth, async (req, res) => {
+app.post("/checkin", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const reservationId = Number(req.body.reservation_id);
   const action = req.body.action;
+
+  const [[resRow]] = await pool.query(
+    "SELECT id, status, room_id FROM reservations WHERE id = ? LIMIT 1",
+    [reservationId]
+  );
+  if (!resRow) {
+    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    return res.redirect("/checkin");
+  }
+
   if (action === "checkin") {
+    if (resRow.status !== "confirmed") {
+      setFlash(
+        req,
+        "error",
+        `BR-05: Check-in sadece onaylanmis (confirmed) rezervasyonlarda yapilabilir. Bu rezervasyon su an: ${resRow.status}`
+      );
+      return res.redirect("/checkin");
+    }
     await pool.query("UPDATE reservations SET status = 'checked_in' WHERE id = ?", [reservationId]);
-    await pool.query(
-      "UPDATE rooms SET status = 'occupied' WHERE id = (SELECT room_id FROM reservations WHERE id = ?)",
-      [reservationId]
-    );
+    await pool.query("UPDATE rooms SET status = 'occupied' WHERE id = ?", [resRow.room_id]);
     setFlash(req, "success", "Check-in islemi tamamlandi!");
   } else if (action === "checkout") {
+    if (resRow.status !== "checked_in") {
+      setFlash(
+        req,
+        "error",
+        `Check-out sadece check-in yapilmis rezervasyonlarda mumkundur. Bu rezervasyon su an: ${resRow.status}`
+      );
+      return res.redirect("/checkin");
+    }
     await pool.query("UPDATE reservations SET status = 'checked_out' WHERE id = ?", [reservationId]);
-    await pool.query(
-      "UPDATE rooms SET status = 'cleaning' WHERE id = (SELECT room_id FROM reservations WHERE id = ?)",
-      [reservationId]
-    );
+    await pool.query("UPDATE rooms SET status = 'cleaning' WHERE id = ?", [resRow.room_id]);
     setFlash(req, "success", "Check-out islemi tamamlandi!");
   }
   return res.redirect("/checkin");
 });
 
-app.get("/payments", ensureAuth, async (req, res) => {
+app.get("/payments", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const [payments] = await pool.query(`
     SELECT p.*, r.id AS reservation_real_id, g.first_name, g.last_name
     FROM payments p
@@ -537,18 +631,47 @@ app.get("/payments", ensureAuth, async (req, res) => {
   });
 });
 
-app.post("/payments", ensureAuth, async (req, res) => {
+app.post("/payments", ensureAuth, requireRole("manager", "receptionist"), async (req, res) => {
   const reservationId = Number(req.body.reservation_id);
+  const amount = Number(req.body.amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setFlash(req, "error", "Odeme tutari pozitif bir sayi olmalidir.");
+    return res.redirect("/payments");
+  }
+
+  const [[resRow]] = await pool.query(
+    "SELECT id, total_amount, status FROM reservations WHERE id = ? LIMIT 1",
+    [reservationId]
+  );
+  if (!resRow) {
+    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    return res.redirect("/payments");
+  }
+
+  const [[paidSum]] = await pool.query(
+    "SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE reservation_id = ? AND status = 'paid'",
+    [reservationId]
+  );
+  const alreadyPaid = Number(paidSum.total);
+  const total = Number(resRow.total_amount || 0);
+  const remaining = total - alreadyPaid;
+
+  if (amount > remaining + 0.01) {
+    setFlash(
+      req,
+      "error",
+      `BR-09: Odeme rezervasyon tutarini asamaz. Kalan tutar: ${remaining.toFixed(2)} TL.`
+    );
+    return res.redirect("/payments");
+  }
+
   await pool.query(
     `
     INSERT INTO payments (reservation_id, amount, method, status, paid_at)
     VALUES (?, ?, ?, 'paid', NOW())
   `,
-    [reservationId, Number(req.body.amount), req.body.method]
-  );
-  await pool.query(
-    "UPDATE payments SET status = 'paid', paid_at = NOW() WHERE reservation_id = ? AND status = 'pending'",
-    [reservationId]
+    [reservationId, amount, req.body.method]
   );
   setFlash(req, "success", "Odeme kaydedildi!");
   return res.redirect("/payments");

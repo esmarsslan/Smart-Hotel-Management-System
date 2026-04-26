@@ -20,6 +20,10 @@
         </div>
       </div>
 
+      <%
+        const role = currentUser?.role;
+        const canSeeFrontDesk = role === "manager" || role === "receptionist";
+      %>
       <nav class="sidebar-nav">
         <a href="/dashboard" class="nav-link <%= currentPath === '/dashboard' ? 'active' : '' %>">
           <span class="nav-icon">⬡</span> Dashboard
@@ -27,18 +31,20 @@
         <a href="/rooms" class="nav-link <%= currentPath === '/rooms' ? 'active' : '' %>">
           <span class="nav-icon">⬡</span> Odalar
         </a>
-        <a href="/guests" class="nav-link <%= currentPath === '/guests' ? 'active' : '' %>">
-          <span class="nav-icon">⬡</span> Misafirler
-        </a>
-        <a href="/reservations" class="nav-link <%= currentPath === '/reservations' ? 'active' : '' %>">
-          <span class="nav-icon">⬡</span> Rezervasyonlar
-        </a>
-        <a href="/checkin" class="nav-link <%= currentPath === '/checkin' ? 'active' : '' %>">
-          <span class="nav-icon">⬡</span> Check-in / Out
-        </a>
-        <a href="/payments" class="nav-link <%= currentPath === '/payments' ? 'active' : '' %>">
-          <span class="nav-icon">⬡</span> Odemeler
-        </a>
+        <% if (canSeeFrontDesk) { %>
+          <a href="/guests" class="nav-link <%= currentPath === '/guests' ? 'active' : '' %>">
+            <span class="nav-icon">⬡</span> Misafirler
+          </a>
+          <a href="/reservations" class="nav-link <%= currentPath === '/reservations' ? 'active' : '' %>">
+            <span class="nav-icon">⬡</span> Rezervasyonlar
+          </a>
+          <a href="/checkin" class="nav-link <%= currentPath === '/checkin' ? 'active' : '' %>">
+            <span class="nav-icon">⬡</span> Check-in / Out
+          </a>
+          <a href="/payments" class="nav-link <%= currentPath === '/payments' ? 'active' : '' %>">
+            <span class="nav-icon">⬡</span> Odemeler
+          </a>
+        <% } %>
       </nav>
 
       <div class="sidebar-footer">
@@ -47,7 +53,14 @@
           <div>
             <div class="user-name"><%= currentUser?.full_name || "Kullanici" %></div>
             <div class="user-role">
-              <%= currentUser?.role === "admin" ? "Yonetici" : currentUser?.role === "receptionist" ? "Resepsiyon" : "Mudur" %>
+              <%
+                const roleLabels = {
+                  manager: "Mudur",
+                  receptionist: "Resepsiyon",
+                  housekeeping: "Temizlik"
+                };
+              %>
+              <%= roleLabels[currentUser?.role] || "Kullanici" %>
             </div>
           </div>
         </div>
@@ -61,7 +74,7 @@
           <h1 class="page-title"><%= pageTitle || "" %></h1>
           <p class="page-sub"><%= pageSub || "" %></p>
         </div>
-        <div class="topbar-right"><%- topbarRight || "" %></div>
+        <div class="topbar-right"><%- typeof topbarRight !== "undefined" ? topbarRight : "" %></div>
       </div>
 
       <div class="content-body">

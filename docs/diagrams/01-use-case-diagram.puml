@@ -1,0 +1,84 @@
+@startuml SmartHotelUseCaseDiagram
+title Smart Hotel Management System - Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFEFE
+  BorderColor #444444
+}
+
+actor "Customer"      as C
+actor "Receptionist"  as R
+actor "Housekeeping"  as H
+actor "Manager"       as M
+
+rectangle "Smart Hotel Management System" {
+  usecase "UC-01\nLogin"                  as UC01
+  usecase "UC-02\nLogout"                 as UC02
+  usecase "UC-03\nView Dashboard"         as UC03
+  usecase "UC-04\nCreate Guest Record"    as UC04
+  usecase "UC-05\nDelete Guest"           as UC05
+  usecase "UC-06\nSearch Guest"           as UC06
+  usecase "UC-07\nCreate Reservation"     as UC07
+  usecase "UC-08\nList Available Rooms"   as UC08
+  usecase "UC-09\nCancel Reservation"     as UC09
+  usecase "UC-10\nCheck-in"               as UC10
+  usecase "UC-11\nCheck-out"              as UC11
+  usecase "UC-12\nRecord Payment"         as UC12
+  usecase "UC-13\nAdd Room"               as UC13
+  usecase "UC-14\nDelete Room"            as UC14
+  usecase "UC-15\nUpdate Room Status"     as UC15
+  usecase "UC-16\nView Revenue Report"    as UC16
+}
+
+' Customer (secondary actor - operations done on his behalf)
+C -- UC04
+C -- UC07
+C -- UC09
+C -- UC10
+C -- UC11
+C -- UC12
+
+' Receptionist
+R --> UC01
+R --> UC02
+R --> UC03
+R --> UC04
+R --> UC06
+R --> UC07
+R --> UC09
+R --> UC10
+R --> UC11
+R --> UC12
+R --> UC15
+
+' Housekeeping
+H --> UC01
+H --> UC02
+H --> UC03
+H --> UC15
+
+' Manager
+M --> UC01
+M --> UC02
+M --> UC03
+M --> UC04
+M --> UC05
+M --> UC06
+M --> UC07
+M --> UC09
+M --> UC10
+M --> UC11
+M --> UC12
+M --> UC13
+M --> UC14
+M --> UC15
+M --> UC16
+
+' Relationships
+UC07 ..> UC08 : <<include>>
+UC11 ..> UC12 : <<include>>
+UC10 ..> UC12 : <<extend>>
+
+@enduml

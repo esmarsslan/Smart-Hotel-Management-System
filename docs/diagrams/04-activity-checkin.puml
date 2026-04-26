@@ -1,0 +1,39 @@
+@startuml CheckinActivityDiagram
+title Activity Diagram - Check-in (UC-10)
+
+|Customer|
+start
+:Otele varir;
+:Resepsiyona gider;
+
+|Receptionist|
+:"Check-in / Out" sayfasini acar;
+
+|System|
+:Bekleyen check-in'leri listele\n(check_in_date = bugun\nAND status = 'confirmed');
+
+|Receptionist|
+:Customer'in rezervasyonunu bulur;
+:"Check-in" butonuna tiklar;
+
+|System|
+if (Rezervasyon status === 'confirmed'?) then (HAYIR)
+  :"BR-05: Check-in sadece\nconfirmed rezervasyonda\nyapilabilir";
+  stop
+endif
+
+fork
+  :Reservation.status = 'checked_in';
+fork again
+  :Room.status = 'occupied'\n(BR-06);
+end fork
+
+:"Check-in islemi tamamlandi!"\nbasari mesaji;
+
+|Receptionist|
+:Oda anahtarini Customer'a verir;
+
+|Customer|
+:Odasina gider;
+stop
+@enduml

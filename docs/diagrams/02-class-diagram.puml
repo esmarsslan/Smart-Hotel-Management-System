@@ -1,0 +1,132 @@
+@startuml SmartHotelClassDiagram
+title Smart Hotel Management System - Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+abstract class User {
+  - id : int
+  - username : string
+  - password : string
+  - full_name : string
+  - role : string
+  - created_at : Date
+  + login(password) : boolean
+  + logout() : void
+  + getRole() : string
+}
+
+class Manager {
+  + addRoom(r : Room) : void
+  + deleteRoom(r : Room) : void
+  + deleteGuest(g : Guest) : void
+  + viewRevenueReport() : Report
+}
+
+class Receptionist {
+  + addGuest(...) : Guest
+  + createReservation(...) : Reservation
+  + cancelReservation(r : Reservation) : void
+  + checkIn(r : Reservation) : void
+  + checkOut(r : Reservation) : void
+  + recordPayment(...) : Payment
+}
+
+class Housekeeping {
+  + updateRoomStatus(r : Room, status) : void
+}
+
+class Guest {
+  - id : int
+  - first_name : string
+  - last_name : string
+  - id_number : string
+  - phone : string
+  - email : string
+  - nationality : string
+  - created_at : Date
+  + getFullName() : string
+}
+
+class Room {
+  - id : int
+  - room_number : string
+  - room_type : string
+  - capacity : int
+  - price_per_night : decimal
+  - status : RoomStatus
+  - floor : int
+  + isAvailable() : boolean
+  + setStatus(s) : void
+  + calculateTotal(nights) : decimal
+}
+
+class Reservation {
+  - id : int
+  - check_in_date : Date
+  - check_out_date : Date
+  - num_guests : int
+  - status : ReservationStatus
+  - total_amount : decimal
+  - notes : string
+  - created_at : Date
+  + calculateNights() : int
+  + cancel() : void
+  + checkIn() : void
+  + checkOut() : void
+  + isOverlapping(other) : boolean
+  + getRemainingBalance() : decimal
+}
+
+class Payment {
+  - id : int
+  - amount : decimal
+  - method : PaymentMethod
+  - status : PaymentStatus
+  - paid_at : DateTime
+  - created_at : Date
+  + markAsPaid() : void
+}
+
+enum RoomStatus {
+  available
+  occupied
+  cleaning
+  maintenance
+}
+
+enum ReservationStatus {
+  confirmed
+  checked_in
+  checked_out
+  cancelled
+}
+
+enum PaymentMethod {
+  cash
+  card
+  transfer
+}
+
+enum PaymentStatus {
+  pending
+  paid
+}
+
+' Generalization (inheritance)
+User <|-- Manager
+User <|-- Receptionist
+User <|-- Housekeeping
+
+' Associations
+Guest "1" o-- "0..*" Reservation : has >
+Room  "1" o-- "0..*" Reservation : booked >
+Reservation "1" *-- "0..*" Payment : settled by >
+
+' Dependencies (operational)
+Receptionist ..> Reservation : creates
+Receptionist ..> Payment     : records
+Manager      ..> Room        : manages
+Housekeeping ..> Room        : updates status
+
+@enduml

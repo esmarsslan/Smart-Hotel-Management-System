@@ -1,0 +1,49 @@
+@startuml ReservationActivityDiagram
+title Activity Diagram - Create Reservation (UC-07)
+
+|Customer|
+start
+:Rezervasyon talep eder;
+
+|Receptionist|
+:Rezervasyonlar sayfasini acar;
+:"+ Yeni Rezervasyon" butonuna basar;
+:Formu doldurur (misafir, oda, tarih, kisi sayisi);
+:"Kaydet" butonuna basar;
+
+|System|
+if (Cikis tarihi > Giris tarihi?) then (HAYIR)
+  :"BR-02: Cikis tarihi\ngiris tarihinden\nsonra olmalidir";
+  stop
+endif
+
+if (Secilen oda mevcut mu?) then (HAYIR)
+  :"Oda bulunamadi";
+  stop
+endif
+
+if (Oda bakimda mi?) then (EVET)
+  :"BR-01: Oda bakimda,\nrezervasyon yapilamaz";
+  stop
+endif
+
+if (Misafir sayisi <= Kapasite?) then (HAYIR)
+  :"BR-03: Kapasite asiyor";
+  stop
+endif
+
+if (Bu tarihlerde\ncakisma var mi?) then (EVET)
+  :"BR-01: Oda bu tarihlerde\nbaska rezervasyona ait";
+  stop
+endif
+
+:Toplam tutar = gece x fiyat\n(BR-04);
+:Rezervasyon kaydet\n(status = 'confirmed');
+:"Rezervasyon olusturuldu!"\nbasari mesaji;
+
+|Receptionist|
+:Customer'a onayi verir;
+
+|Customer|
+stop
+@enduml

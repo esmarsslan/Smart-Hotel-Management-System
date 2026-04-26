@@ -42,9 +42,11 @@
             <td><%= guest.nationality || "-" %></td>
             <td><%= formatDate(guest.created_at) %></td>
             <td>
-              <form method="POST" action="/guests/delete/<%= guest.id %>" onsubmit="return confirm('Bu misafiri silmek istediginize emin misiniz?')">
-                <button type="submit" class="btn-icon-danger">✕</button>
-              </form>
+              <% if (canDeleteGuest) { %>
+                <form method="POST" action="/guests/delete/<%= guest.id %>" onsubmit="return confirm('Bu misafiri silmek istediginize emin misiniz?')">
+                  <button type="submit" class="btn-icon-danger">✕</button>
+                </form>
+              <% } %>
             </td>
           </tr>
         <% }) %>

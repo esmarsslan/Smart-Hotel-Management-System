@@ -70,14 +70,17 @@
           </select>
           <button type="submit" class="btn-secondary-custom">Guncelle</button>
         </form>
-        <form method="POST" action="/rooms/delete/<%= room.id %>" onsubmit="return confirm('Bu odayi silmek istediginize emin misiniz?');">
-          <button type="submit" class="btn-icon-danger" title="Odayi Sil">✕</button>
-        </form>
+        <% if (canManageRooms) { %>
+          <form method="POST" action="/rooms/delete/<%= room.id %>" onsubmit="return confirm('Bu odayi silmek istediginize emin misiniz?');">
+            <button type="submit" class="btn-icon-danger" title="Odayi Sil">✕</button>
+          </form>
+        <% } %>
       </div>
     </div>
   <% }) %>
 </div>
 
+<% if (canManageRooms) { %>
 <div class="modal-overlay" id="addRoomModal" style="display: none">
   <div class="modal-box">
     <div class="modal-header">
@@ -122,3 +125,4 @@
     </form>
   </div>
 </div>
+<% } %>
