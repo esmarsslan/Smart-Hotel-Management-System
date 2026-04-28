@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Giris - Grand Hotel</title>
+  <title>Login - Grand Hotel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,19 +16,19 @@
         <div class="brand-icon large">GH</div>
         <div class="login-brand-text">Grand Hotel</div>
       </div>
-      <div class="login-tagline">Akilli Otel Yonetim Sistemi</div>
+      <div class="login-tagline">Smart Hotel Management System</div>
       <div class="login-features">
-        <div class="feat-item">Rezervasyon Yonetimi</div>
+        <div class="feat-item">Reservation Management</div>
         <div class="feat-item">Check-in / Check-out</div>
-        <div class="feat-item">Oda ve Misafir Takibi</div>
-        <div class="feat-item">Odeme Islemleri</div>
+        <div class="feat-item">Room and Guest Tracking</div>
+        <div class="feat-item">Payment Operations</div>
       </div>
     </div>
 
     <div class="login-right">
       <div class="login-card">
-        <div class="login-card-title">Hos Geldiniz</div>
-        <div class="login-card-sub">Sisteme giris yapin</div>
+        <div class="login-card-title">Welcome</div>
+        <div class="login-card-sub">Sign in to the system</div>
 
         <% if (flash) { %>
           <div class="alert-toast alert-<%= flash.type %>" style="margin-bottom: 16px;"><%= flash.text %></div>
@@ -36,21 +36,21 @@
 
         <form method="POST" action="/login">
           <div class="form-group-custom mb-3">
-            <label>Kullanici Adi</label>
-            <input type="text" name="username" class="form-control-custom" placeholder="kullanici.adi" required autofocus>
+            <label>Username</label>
+            <input type="text" name="username" class="form-control-custom" placeholder="username" required autofocus>
           </div>
           <div class="form-group-custom mb-4">
-            <label>Sifre</label>
+            <label>Password</label>
             <input type="password" name="password" class="form-control-custom" placeholder="••••••••" required>
           </div>
-          <button type="submit" class="btn-primary-custom w-100">Giris Yap</button>
+          <button type="submit" class="btn-primary-custom w-100">Sign In</button>
         </form>
 
         <div class="login-demo-accounts">
-          <div class="demo-title">Demo Hesaplar</div>
-          <div class="demo-row"><span class="demo-role">Mudur</span><span class="demo-cred">yonetici / yon123</span></div>
-          <div class="demo-row"><span class="demo-role">Resepsiyon</span><span class="demo-cred">resepsiyon / res123</span></div>
-          <div class="demo-row"><span class="demo-role">Temizlik</span><span class="demo-cred">temizlik / temz123</span></div>
+          <div class="demo-title">Demo Accounts</div>
+          <div class="demo-row"><span class="demo-role">Manager</span><span class="demo-cred">yonetici / yon123</span></div>
+          <div class="demo-row"><span class="demo-role">Receptionist</span><span class="demo-cred">resepsiyon / res123</span></div>
+          <div class="demo-row"><span class="demo-role">Housekeeping</span><span class="demo-cred">temizlik / temz123</span></div>
         </div>
       </div>
     </div>

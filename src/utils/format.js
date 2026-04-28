@@ -1,21 +1,21 @@
-const trDate = new Intl.DateTimeFormat("tr-TR", {
+const enDate = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "long",
   year: "numeric",
 });
-const trDateShort = new Intl.DateTimeFormat("tr-TR", {
+const enDateShort = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
 });
-const trDateTime = new Intl.DateTimeFormat("tr-TR", {
+const enDateTime = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
 });
-const trCurrency = new Intl.NumberFormat("tr-TR", {
+const enCurrency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
@@ -27,21 +27,21 @@ function toDate(value) {
 
 function formatDate(value) {
   const date = toDate(value);
-  return date ? trDate.format(date) : "-";
+  return date ? enDate.format(date) : "-";
 }
 
 function formatDateShort(value) {
   const date = toDate(value);
-  return date ? trDateShort.format(date) : "-";
+  return date ? enDateShort.format(date) : "-";
 }
 
 function formatDateTime(value) {
   const date = toDate(value);
-  return date ? trDateTime.format(date) : "-";
+  return date ? enDateTime.format(date) : "-";
 }
 
 function formatCurrency(value) {
-  return trCurrency.format(Number(value || 0));
+  return enCurrency.format(Number(value || 0));
 }
 
 function toInputDate(value) {
@@ -54,10 +54,10 @@ function toInputDate(value) {
 }
 
 function getStatusBadge(status) {
-  if (status === "confirmed") return { text: "Onayli", className: "badge-blue" };
+  if (status === "confirmed") return { text: "Confirmed", className: "badge-blue" };
   if (status === "checked_in") return { text: "Check-in", className: "badge-green" };
   if (status === "checked_out") return { text: "Check-out", className: "badge-gray" };
-  if (status === "cancelled") return { text: "Iptal", className: "badge-red" };
+  if (status === "cancelled") return { text: "Cancelled", className: "badge-red" };
   return { text: status || "-", className: "badge-gray" };
 }
 

@@ -20,11 +20,11 @@ function requireRole(...allowedRoles) {
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).render("error", {
         layout: "layout",
-        pageTitle: "Yetkisiz Erisim",
+        pageTitle: "Unauthorized Access",
         pageSub: "",
         flash: null,
         statusCode: 403,
-        message: "Bu islemi yapmaya yetkiniz yok.",
+        message: "You do not have permission to perform this action.",
         allowedRoles,
         userRole,
       });

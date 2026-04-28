@@ -1,12 +1,12 @@
 <div class="error-page" style="max-width: 560px; margin: 80px auto; text-align: center; padding: 40px; background: var(--bg-card, #fff); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
   <div style="font-size: 64px; font-weight: 600; color: #d33; margin-bottom: 8px;"><%= statusCode %></div>
-  <h2 style="margin-bottom: 12px;">Yetkisiz Erisim</h2>
+  <h2 style="margin-bottom: 12px;">Unauthorized Access</h2>
   <p style="color: #666; margin-bottom: 20px;"><%= message %></p>
   <% if (allowedRoles && allowedRoles.length) { %>
     <p style="font-size: 14px; color: #888; margin-bottom: 20px;">
-      Bu sayfa icin gereken rol(ler): <strong><%= allowedRoles.join(", ") %></strong><br>
-      Sizin rolunuz: <strong><%= userRole %></strong>
+      Required role(s) for this page: <strong><%= allowedRoles.join(", ") %></strong><br>
+      Your role: <strong><%= userRole %></strong>
     </p>
   <% } %>
-  <a href="/dashboard" class="btn-primary-custom" style="display: inline-block; padding: 10px 24px; text-decoration: none;">Dashboard'a Don</a>
+  <a href="/dashboard" class="btn-primary-custom" style="display: inline-block; padding: 10px 24px; text-decoration: none;">Back to Dashboard</a>
 </div>

@@ -3,3 +3,22 @@ node_modules/
 npm-debug.log*
 .vscode/
 docs/README.md
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build/temp
+dist/
+build/
+coverage/
+tmp/

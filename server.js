@@ -173,7 +173,7 @@ app.post("/login", async (req, res) => {
     };
     return res.redirect("/dashboard");
   }
-  setFlash(req, "error", "Kullanici adi veya sifre hatali!");
+  setFlash(req, "error", "Username or password is incorrect!");
   return res.redirect("/login");
 });
 
@@ -231,7 +231,7 @@ app.get("/dashboard", ensureAuth, async (req, res) => {
 
   return res.render("dashboard", {
     pageTitle: "Dashboard",
-    pageSub: `Bugun: ${formatDate(new Date())}`,
+    pageSub: `Today: ${formatDate(new Date())}`,
     flash: pullFlash(req),
     total_rooms: totalRooms,
     occupied_rooms: occupiedRooms,
@@ -270,10 +270,10 @@ app.get("/rooms", ensureAuth, async (req, res) => {
 
   const canManageRooms = req.session.user.role === "manager";
   return res.render("rooms", {
-    pageTitle: "Odalar",
-    pageSub: "Oda durumlarini goruntule ve yonet",
+    pageTitle: "Rooms",
+    pageSub: "View and manage room statuses",
     topbarRight: canManageRooms
-      ? '<button class="btn-primary-custom" onclick="openModal(\'addRoomModal\')">+ Oda Ekle</button>'
+      ? '<button class="btn-primary-custom" onclick="openModal(\'addRoomModal\')">+ Add Room</button>'
       : "",
     canManageRooms,
     flash: pullFlash(req),
@@ -294,7 +294,7 @@ app.post("/rooms", ensureAuth, requireRole("manager"), async (req, res) => {
     "INSERT INTO rooms (room_number, room_type, capacity, price_per_night, floor, status) VALUES (?, ?, ?, ?, ?, 'available')",
     [room_number, room_type, Number(capacity), Number(price), Number(floor)]
   );
-  setFlash(req, "success", "Oda basariyla eklendi!");
+  setFlash(req, "success", "Room added successfully!");
   return res.redirect("/rooms");
 });
 
@@ -303,13 +303,13 @@ app.post("/rooms/update-status/:roomId", ensureAuth, requireRole("manager", "rec
     req.body.status,
     Number(req.params.roomId),
   ]);
-  setFlash(req, "success", "Oda durumu guncellendi!");
+  setFlash(req, "success", "Room status updated!");
   return res.redirect("/rooms");
 });
 
 app.post("/rooms/delete/:roomId", ensureAuth, requireRole("manager"), async (req, res) => {
   await pool.query("DELETE FROM rooms WHERE id = ?", [Number(req.params.roomId)]);
-  setFlash(req, "success", "Oda silindi.");
+  setFlash(req, "success", "Room deleted.");
   return res.redirect("/rooms");
 });
 
@@ -332,10 +332,10 @@ app.get("/guests", ensureAuth, requireRole("manager", "receptionist"), async (re
   }
   const canDeleteGuest = req.session.user.role === "manager";
   return res.render("guests", {
-    pageTitle: "Misafirler",
-    pageSub: "Kayitli misafir listesi",
+    pageTitle: "Guests",
+    pageSub: "Registered guest list",
     topbarRight:
-      '<button class="btn-primary-custom" onclick="openModal(\'addGuestModal\')">+ Misafir Ekle</button>',
+      '<button class="btn-primary-custom" onclick="openModal(\'addGuestModal\')">+ Add Guest</button>',
     flash: pullFlash(req),
     guests,
     search,
@@ -352,7 +352,7 @@ app.post("/guests", ensureAuth, requireRole("manager", "receptionist"), async (r
     `,
     [first_name, last_name, id_number || null, phone || null, email || null, nationality || "Turkiye"]
   );
-  setFlash(req, "success", "Misafir kaydedildi!");
+  setFlash(req, "success", "Guest saved!");
   return res.redirect("/guests");
 });
 
@@ -367,12 +367,12 @@ app.post("/guests/delete/:guestId", ensureAuth, requireRole("manager"), async (r
     setFlash(
       req,
       "error",
-      "BR-10: Bu misafirin aktif rezervasyonu var, silinemez. Once rezervasyonu iptal edin veya cikis yaptirin."
+      "BR-10: This guest has an active reservation and cannot be deleted. Please cancel the reservation or check the guest out first."
     );
     return res.redirect("/guests");
   }
   await pool.query("DELETE FROM guests WHERE id = ?", [guestId]);
-  setFlash(req, "success", "Misafir silindi.");
+  setFlash(req, "success", "Guest deleted.");
   return res.redirect("/guests");
 });
 
@@ -419,10 +419,10 @@ app.get("/reservations", ensureAuth, requireRole("manager", "receptionist"), asy
     "SELECT * FROM rooms WHERE status = 'available' ORDER BY room_number ASC"
   );
   return res.render("reservations", {
-    pageTitle: "Rezervasyonlar",
-    pageSub: "Tum rezervasyonlari goruntule ve yonet",
+    pageTitle: "Reservations",
+    pageSub: "View and manage all reservations",
     topbarRight:
-      '<button class="btn-primary-custom" onclick="openModal(\'addResModal\')">+ Yeni Rezervasyon</button>',
+      '<button class="btn-primary-custom" onclick="openModal(\'addResModal\')">+ New Reservation</button>',
     flash: pullFlash(req),
     reservations,
     guests,
@@ -440,27 +440,27 @@ app.post("/reservations", ensureAuth, requireRole("manager", "receptionist"), as
   const checkOut = new Date(req.body.check_out_date);
 
   if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
-    setFlash(req, "error", "Gecersiz tarih girisi.");
+    setFlash(req, "error", "Invalid date input.");
     return res.redirect("/reservations");
   }
   if (checkOut <= checkIn) {
-    setFlash(req, "error", "BR-02: Cikis tarihi giris tarihinden sonra olmalidir.");
+    setFlash(req, "error", "BR-02: Check-out date must be after check-in date.");
     return res.redirect("/reservations");
   }
 
   const [roomRows] = await pool.query("SELECT * FROM rooms WHERE id = ? LIMIT 1", [roomId]);
   const room = roomRows[0];
   if (!room) {
-    setFlash(req, "error", "Secilen oda bulunamadi.");
+    setFlash(req, "error", "Selected room not found.");
     return res.redirect("/reservations");
   }
   if (room.status === "maintenance") {
-    setFlash(req, "error", `BR-01: ${room.room_number} numarali oda bakimda, rezervasyon yapilamaz.`);
+    setFlash(req, "error", `BR-01: Room ${room.room_number} is under maintenance, reservation cannot be made.`);
     return res.redirect("/reservations");
   }
 
   if (numGuests > room.capacity) {
-    setFlash(req, "error", `BR-03: Misafir sayisi (${numGuests}) odanin kapasitesini (${room.capacity}) asiyor.`);
+    setFlash(req, "error", `BR-03: Number of guests (${numGuests}) exceeds room capacity (${room.capacity}).`);
     return res.redirect("/reservations");
   }
 
@@ -473,7 +473,7 @@ app.post("/reservations", ensureAuth, requireRole("manager", "receptionist"), as
     [roomId, toInputDate(checkIn), toInputDate(checkOut)]
   );
   if (conflicts.length > 0) {
-    setFlash(req, "error", `BR-01: ${room.room_number} numarali oda bu tarihlerde dolu.`);
+    setFlash(req, "error", `BR-01: Room ${room.room_number} is occupied on these dates.`);
     return res.redirect("/reservations");
   }
 
@@ -497,7 +497,7 @@ app.post("/reservations", ensureAuth, requireRole("manager", "receptionist"), as
       req.body.notes || null,
     ]
   );
-  setFlash(req, "success", "Rezervasyon olusturuldu!");
+  setFlash(req, "success", "Reservation created!");
   return res.redirect("/reservations");
 });
 
@@ -508,15 +508,15 @@ app.post("/reservations/cancel/:reservationId", ensureAuth, requireRole("manager
     [reservationId]
   );
   if (!resRow) {
-    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    setFlash(req, "error", "Reservation not found.");
     return res.redirect("/reservations");
   }
   if (resRow.status !== "confirmed") {
-    setFlash(req, "error", "Sadece onaylanmis (confirmed) rezervasyonlar iptal edilebilir.");
+    setFlash(req, "error", "Only confirmed reservations can be cancelled.");
     return res.redirect("/reservations");
   }
   await pool.query("UPDATE reservations SET status = 'cancelled' WHERE id = ?", [reservationId]);
-  setFlash(req, "success", "Rezervasyon iptal edildi.");
+  setFlash(req, "success", "Reservation cancelled.");
   return res.redirect("/reservations");
 });
 
@@ -547,7 +547,7 @@ app.get("/checkin", ensureAuth, requireRole("manager", "receptionist"), async (r
   `);
   return res.render("checkin", {
     pageTitle: "Check-in / Check-out",
-    pageSub: "Gunluk giris ve cikis islemleri",
+    pageSub: "Daily check-in and check-out operations",
     flash: pullFlash(req),
     pending_checkins: pendingCheckins,
     pending_checkouts: pendingCheckouts,
@@ -565,7 +565,7 @@ app.post("/checkin", ensureAuth, requireRole("manager", "receptionist"), async (
     [reservationId]
   );
   if (!resRow) {
-    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    setFlash(req, "error", "Reservation not found.");
     return res.redirect("/checkin");
   }
 
@@ -574,25 +574,25 @@ app.post("/checkin", ensureAuth, requireRole("manager", "receptionist"), async (
       setFlash(
         req,
         "error",
-        `BR-05: Check-in sadece onaylanmis (confirmed) rezervasyonlarda yapilabilir. Bu rezervasyon su an: ${resRow.status}`
+        `BR-05: Check-in can only be performed on confirmed reservations. This reservation is currently: ${resRow.status}`
       );
       return res.redirect("/checkin");
     }
     await pool.query("UPDATE reservations SET status = 'checked_in' WHERE id = ?", [reservationId]);
     await pool.query("UPDATE rooms SET status = 'occupied' WHERE id = ?", [resRow.room_id]);
-    setFlash(req, "success", "Check-in islemi tamamlandi!");
+    setFlash(req, "success", "Check-in completed!");
   } else if (action === "checkout") {
     if (resRow.status !== "checked_in") {
       setFlash(
         req,
         "error",
-        `Check-out sadece check-in yapilmis rezervasyonlarda mumkundur. Bu rezervasyon su an: ${resRow.status}`
+        `Check-out can only be performed on checked-in reservations. This reservation is currently: ${resRow.status}`
       );
       return res.redirect("/checkin");
     }
     await pool.query("UPDATE reservations SET status = 'checked_out' WHERE id = ?", [reservationId]);
     await pool.query("UPDATE rooms SET status = 'cleaning' WHERE id = ?", [resRow.room_id]);
-    setFlash(req, "success", "Check-out islemi tamamlandi!");
+    setFlash(req, "success", "Check-out completed!");
   }
   return res.redirect("/checkin");
 });
@@ -619,10 +619,10 @@ app.get("/payments", ensureAuth, requireRole("manager", "receptionist"), async (
     "SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE status = 'pending'"
   );
   return res.render("payments", {
-    pageTitle: "Odemeler",
-    pageSub: "Odeme kayitlari ve tahsilat",
+    pageTitle: "Payments",
+    pageSub: "Payment records and collections",
     topbarRight:
-      '<button class="btn-primary-custom" onclick="openModal(\'addPayModal\')">+ Odeme Kaydet</button>',
+      '<button class="btn-primary-custom" onclick="openModal(\'addPayModal\')">+ Record Payment</button>',
     flash: pullFlash(req),
     payments,
     pending_reservations: pendingReservations,
@@ -636,7 +636,7 @@ app.post("/payments", ensureAuth, requireRole("manager", "receptionist"), async 
   const amount = Number(req.body.amount);
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    setFlash(req, "error", "Odeme tutari pozitif bir sayi olmalidir.");
+    setFlash(req, "error", "Payment amount must be a positive number.");
     return res.redirect("/payments");
   }
 
@@ -645,7 +645,7 @@ app.post("/payments", ensureAuth, requireRole("manager", "receptionist"), async 
     [reservationId]
   );
   if (!resRow) {
-    setFlash(req, "error", "Rezervasyon bulunamadi.");
+    setFlash(req, "error", "Reservation not found.");
     return res.redirect("/payments");
   }
 
@@ -661,7 +661,7 @@ app.post("/payments", ensureAuth, requireRole("manager", "receptionist"), async 
     setFlash(
       req,
       "error",
-      `BR-09: Odeme rezervasyon tutarini asamaz. Kalan tutar: ${remaining.toFixed(2)} TL.`
+      `BR-09: Payment cannot exceed the reservation amount. Remaining: ${remaining.toFixed(2)} TL.`
     );
     return res.redirect("/payments");
   }
@@ -673,13 +673,13 @@ app.post("/payments", ensureAuth, requireRole("manager", "receptionist"), async 
   `,
     [reservationId, amount, req.body.method]
   );
-  setFlash(req, "success", "Odeme kaydedildi!");
+  setFlash(req, "success", "Payment recorded!");
   return res.redirect("/payments");
 });
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send("Beklenmeyen bir hata olustu.");
+  res.status(500).send("An unexpected error occurred.");
 });
 
 async function start() {

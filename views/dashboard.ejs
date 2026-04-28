@@ -1,61 +1,61 @@
 <div class="stat-grid">
   <div class="stat-card">
-    <div class="stat-label">Toplam Oda</div>
+    <div class="stat-label">Total Rooms</div>
     <div class="stat-value"><%= total_rooms %></div>
-    <div class="stat-detail"><%= cleaning_rooms %> oda temizleniyor</div>
+    <div class="stat-detail"><%= cleaning_rooms %> rooms being cleaned</div>
   </div>
   <div class="stat-card accent-blue">
-    <div class="stat-label">Doluluk Orani</div>
+    <div class="stat-label">Occupancy Rate</div>
     <div class="stat-value">%<%= occupancy_rate %></div>
-    <div class="stat-detail"><%= occupied_rooms %> / <%= total_rooms %> oda dolu</div>
+    <div class="stat-detail"><%= occupied_rooms %> / <%= total_rooms %> rooms occupied</div>
   </div>
   <div class="stat-card accent-green">
-    <div class="stat-label">Aktif Misafir</div>
+    <div class="stat-label">Active Guests</div>
     <div class="stat-value"><%= active_guests %></div>
-    <div class="stat-detail">Su an konaklayanlar</div>
+    <div class="stat-detail">Currently staying</div>
   </div>
   <div class="stat-card accent-amber">
-    <div class="stat-label">Toplam Gelir</div>
+    <div class="stat-label">Total Revenue</div>
     <div class="stat-value">₺<%= formatCurrency(total_revenue) %></div>
-    <div class="stat-detail">Onayli odemeler</div>
+    <div class="stat-detail">Confirmed payments</div>
   </div>
 </div>
 
 <div class="secondary-stat-grid">
   <div class="secondary-stat">
-    <span class="sec-label">Bugun Check-in</span>
+    <span class="sec-label">Today's Check-in</span>
     <span class="sec-value blue"><%= today_checkins %></span>
   </div>
   <div class="secondary-stat">
-    <span class="sec-label">Bugun Check-out</span>
+    <span class="sec-label">Today's Check-out</span>
     <span class="sec-value orange"><%= today_checkouts %></span>
   </div>
   <div class="secondary-stat">
-    <span class="sec-label">Musait Oda</span>
+    <span class="sec-label">Available Rooms</span>
     <span class="sec-value green"><%= available_rooms %></span>
   </div>
   <div class="secondary-stat">
-    <span class="sec-label">Temizleniyor</span>
+    <span class="sec-label">Cleaning</span>
     <span class="sec-value gray"><%= cleaning_rooms %></span>
   </div>
 </div>
 
 <div class="card-section">
   <div class="section-header">
-    <h2 class="section-title">Son Rezervasyonlar</h2>
-    <a href="/reservations" class="section-link">Tumunu gor →</a>
+    <h2 class="section-title">Recent Reservations</h2>
+    <a href="/reservations" class="section-link">View all →</a>
   </div>
   <div class="table-wrapper">
     <table class="data-table">
       <thead>
         <tr>
           <th>#</th>
-          <th>Misafir</th>
-          <th>Oda</th>
-          <th>Giris</th>
-          <th>Cikis</th>
-          <th>Tutar</th>
-          <th>Durum</th>
+          <th>Guest</th>
+          <th>Room</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Amount</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
@@ -68,10 +68,10 @@
             <td><%= formatDateShort(res.check_out_date) %></td>
             <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
             <td>
-              <% if (res.status === "confirmed") { %><span class="badge badge-blue">Onayli</span>
+              <% if (res.status === "confirmed") { %><span class="badge badge-blue">Confirmed</span>
               <% } else if (res.status === "checked_in") { %><span class="badge badge-green">Check-in</span>
               <% } else if (res.status === "checked_out") { %><span class="badge badge-gray">Check-out</span>
-              <% } else if (res.status === "cancelled") { %><span class="badge badge-red">Iptal</span><% } %>
+              <% } else if (res.status === "cancelled") { %><span class="badge badge-red">Cancelled</span><% } %>
             </td>
           </tr>
         <% }) %>

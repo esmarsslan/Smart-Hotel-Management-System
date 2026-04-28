@@ -1,14 +1,14 @@
 <div class="checkin-layout">
   <div class="card-section">
     <div class="section-header">
-      <h2 class="section-title">Bugun Check-in Bekleyenler</h2>
+      <h2 class="section-title">Today's Pending Check-ins</h2>
       <span class="count-badge blue"><%= pending_checkins.length %></span>
     </div>
     <% if (pending_checkins.length) { %>
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
-            <tr><th>Misafir</th><th>Oda</th><th>Kisi</th><th>Tutar</th><th></th></tr>
+            <tr><th>Guest</th><th>Room</th><th>People</th><th>Amount</th><th></th></tr>
           </thead>
           <tbody>
             <% pending_checkins.forEach((res) => { %>
@@ -23,13 +23,13 @@
                   </div>
                 </td>
                 <td><strong><%= res.room_number %></strong> <span class="room-type-tag"><%= res.room_type %></span></td>
-                <td><%= res.num_guests %> kisi</td>
+                <td><%= res.num_guests %> people</td>
                 <td class="mono">₺<%= formatCurrency(res.total_amount) %></td>
                 <td>
                   <form method="POST" action="/checkin">
                     <input type="hidden" name="reservation_id" value="<%= res.id %>">
                     <input type="hidden" name="action" value="checkin">
-                    <button type="submit" class="btn-action-green">Check-in Yap ✓</button>
+                    <button type="submit" class="btn-action-green">Check In ✓</button>
                   </form>
                 </td>
               </tr>
@@ -38,20 +38,20 @@
         </table>
       </div>
     <% } else { %>
-      <div class="empty-state">Bugun bekleyen check-in yok.</div>
+      <div class="empty-state">No pending check-ins today.</div>
     <% } %>
   </div>
 
   <div class="card-section">
     <div class="section-header">
-      <h2 class="section-title">Check-out Bekleyenler</h2>
+      <h2 class="section-title">Pending Check-outs</h2>
       <span class="count-badge orange"><%= pending_checkouts.length %></span>
     </div>
     <% if (pending_checkouts.length) { %>
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
-            <tr><th>Misafir</th><th>Oda</th><th>Giris</th><th>Tutar</th><th></th></tr>
+            <tr><th>Guest</th><th>Room</th><th>Check-in</th><th>Amount</th><th></th></tr>
           </thead>
           <tbody>
             <% pending_checkouts.forEach((res) => { %>
@@ -69,7 +69,7 @@
                   <form method="POST" action="/checkin">
                     <input type="hidden" name="reservation_id" value="<%= res.id %>">
                     <input type="hidden" name="action" value="checkout">
-                    <button type="submit" class="btn-action-orange">Check-out Yap →</button>
+                    <button type="submit" class="btn-action-orange">Check Out →</button>
                   </form>
                 </td>
               </tr>
@@ -78,20 +78,20 @@
         </table>
       </div>
     <% } else { %>
-      <div class="empty-state">Bugun bekleyen check-out yok.</div>
+      <div class="empty-state">No pending check-outs today.</div>
     <% } %>
   </div>
 
   <div class="card-section">
     <div class="section-header">
-      <h2 class="section-title">Su An Konaklayanlar</h2>
+      <h2 class="section-title">Currently Staying</h2>
       <span class="count-badge green"><%= active_stays.length %></span>
     </div>
     <% if (active_stays.length) { %>
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
-            <tr><th>Misafir</th><th>Oda</th><th>Giris</th><th>Cikis</th><th>Kalan</th><th>Durum</th></tr>
+            <tr><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Remaining</th><th>Status</th></tr>
           </thead>
           <tbody>
             <% active_stays.forEach((res) => { %>
@@ -107,18 +107,18 @@
                 <td><%= formatDateShort(res.check_in_date) %></td>
                 <td><%= formatDateShort(res.check_out_date) %></td>
                 <td>
-                  <% if (remaining <= 0) { %><span class="badge badge-orange">Bugun cikis</span>
-                  <% } else if (remaining === 1) { %><span class="badge badge-orange">Yarin cikis</span>
-                  <% } else { %><span class="badge badge-blue"><%= remaining %> gun</span><% } %>
+                  <% if (remaining <= 0) { %><span class="badge badge-orange">Checking out today</span>
+                  <% } else if (remaining === 1) { %><span class="badge badge-orange">Checking out tomorrow</span>
+                  <% } else { %><span class="badge badge-blue"><%= remaining %> days</span><% } %>
                 </td>
-                <td><span class="badge badge-green">Konaklamada</span></td>
+                <td><span class="badge badge-green">Staying</span></td>
               </tr>
             <% }) %>
           </tbody>
         </table>
       </div>
     <% } else { %>
-      <div class="empty-state">Su an konaklayan misafir yok.</div>
+      <div class="empty-state">No guests currently staying.</div>
     <% } %>
   </div>
 </div>
